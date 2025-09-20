@@ -19,7 +19,7 @@ function verifyToken(token: string) {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -38,7 +38,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { name, email, phone } = await request.json();
 
     if (!name || !email) {
@@ -99,7 +99,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -118,7 +118,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if user exists
     const { data: existingUser } = await supabase

@@ -101,7 +101,7 @@ export default function HotLeadsPage() {
 
                         <div className="flex items-center">
                           <FileText className="w-4 h-4 text-gray-400 mr-3" />
-                          <p className="text-sm text-gray-900">{lead.project_interest}</p>
+                          <p className="text-sm text-gray-900">{typeof lead.project_interest === 'string' ? lead.project_interest : lead.project_interest?.name || 'Unknown Project'}</p>
                         </div>
 
                         {lead.notes && (

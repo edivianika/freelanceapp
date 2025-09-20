@@ -320,7 +320,7 @@ export default function AdminSubmissionsPage() {
                       <div>
                         <div className="text-sm font-medium text-gray-900">{submission.name}</div>
                         <div className="text-sm text-gray-500">{submission.phone_number}</div>
-                        <div className="text-sm text-gray-500">{submission.project_interest || 'Unknown Project'}</div>
+                        <div className="text-sm text-gray-500">{typeof submission.project_interest === 'string' ? submission.project_interest : submission.project_interest?.name || 'Unknown Project'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
 
           if (duplicateChain && duplicateChain.length > 1) {
             // Calculate tier for each submission based on creation order
-            const duplicateInfo = duplicateChain.map((dup, index) => ({
+            const duplicateInfo = duplicateChain.map((dup: any, index: number) => ({
               id: dup.id,
               user_name: dup.user?.name || 'Unknown',
               user_email: dup.user?.email || 'Unknown',
