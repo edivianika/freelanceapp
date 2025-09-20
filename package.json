@@ -1,0 +1,49 @@
+{
+  "name": "data-marketing-freelance",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/start-dev.js",
+    "dev:test": "node scripts/test-start.js",
+    "dev:simple": "node scripts/start-simple.js",
+    "dev:concurrent": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "next dev --turbopack",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint",
+    "install:all": "npm install && cd backend && npm install"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.57.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.542.0",
+    "multer": "^2.0.2",
+    "next": "15.5.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hot-toast": "^2.6.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

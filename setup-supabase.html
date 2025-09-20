@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Setup Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .code {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .copy-btn {
+            background: #28a745;
+            font-size: 12px;
+            padding: 5px 10px;
+        }
+        .copy-btn:hover {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Supabase Setup Guide</h1>
+        <p>Follow these steps to set up your Supabase database and fix the login issues.</p>
+
+        <div class="warning">
+            <strong>⚠️ Current Issue:</strong> Your backend is using placeholder Supabase credentials, which is why login fails with "Invalid credentials".
+        </div>
+
+        <div class="step">
+            <h3>Step 1: Create Supabase Project</h3>
+            <p>If you don't have a Supabase project yet:</p>
+            <ol>
+                <li>Go to <a href="https://supabase.com" target="_blank">https://supabase.com</a></li>
+                <li>Sign up/Login to your account</li>
+                <li>Click "New Project"</li>
+                <li>Choose your organization</li>
+                <li>Enter project name: <code>data-marketing-freelance</code></li>
+                <li>Enter database password (save this!)</li>
+                <li>Choose region closest to you</li>
+                <li>Click "Create new project"</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Get Your Project Credentials</h3>
+            <p>Once your project is created:</p>
+            <ol>
+                <li>Go to <strong>Settings</strong> → <strong>API</strong></li>
+                <li>Copy the following values:</li>
+                <ul>
+                    <li><strong>Project URL</strong> (looks like: <code>https://xxxxx.supabase.co</code>)</li>
+                    <li><strong>anon public</strong> key (starts with <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code>)</li>
+                    <li><strong>service_role</strong> key (starts with <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code>)</li>
+                </ul>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Setup Database Schema</h3>
+            <p>Run this SQL in your Supabase SQL Editor:</p>
+            <div class="code" id="sql-code">
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS override_logs CASCADE;
+DROP TABLE IF EXISTS submission_files CASCADE;
+DROP TABLE IF EXISTS submissions CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- Create users table
+CREATE TABLE users (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'marketer' CHECK (role IN ('admin', 'marketer')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create submissions table
+CREATE TABLE submissions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    project_interest TEXT,
+    additional_info TEXT,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    is_hot_lead BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create submission_files table
+CREATE TABLE submission_files (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INTEGER,
+    file_type VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create override_logs table
+CREATE TABLE override_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    admin_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_name VARCHAR(255),
+    action_type VARCHAR(50) NOT NULL,
+    target_type VARCHAR(50) NOT NULL,
+    target_id UUID NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insert test users
+INSERT INTO users (name, email, password_hash, role) VALUES
+('Admin User', 'admin@test.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8KzKz2K', 'admin'),
+('Marketer User', 'marketer@test.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8KzKz2K', 'marketer');
+
+-- Create indexes
+CREATE INDEX idx_submissions_user_id ON submissions(user_id);
+CREATE INDEX idx_submissions_status ON submissions(status);
+CREATE INDEX idx_submissions_created_at ON submissions(created_at);
+CREATE INDEX idx_submission_files_submission_id ON submission_files(submission_id);
+CREATE INDEX idx_override_logs_admin_id ON override_logs(admin_id);
+CREATE INDEX idx_override_logs_created_at ON override_logs(created_at);
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('sql-code')">Copy SQL</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Create Storage Bucket</h3>
+            <p>Create a storage bucket for file uploads:</p>
+            <ol>
+                <li>Go to <strong>Storage</strong> in your Supabase dashboard</li>
+                <li>Click <strong>"New bucket"</strong></li>
+                <li>Name: <code>submission-files</code></li>
+                <li>Make it <strong>Public</strong></li>
+                <li>Click <strong>"Create bucket"</strong></li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Update Environment Variables</h3>
+            <p>Update your <code>backend/.env</code> file with the real values:</p>
+            <div class="code" id="env-code">
+# Server Configuration
+PORT=3001
+FRONTEND_URL=http://localhost:3000
+
+# JWT Configuration
+JWT_SECRET=your-very-secure-random-jwt-secret-key-here
+
+# Supabase Configuration
+SUPABASE_URL=https://your-actual-project-id.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard('env-code')">Copy Template</button>
+        </div>
+
+        <div class="step">
+            <h3>Step 6: Test Login</h3>
+            <p>After completing the setup:</p>
+            <ol>
+                <li>Restart your development server: <code>npm run dev</code></li>
+                <li>Go to <a href="http://localhost:3000/login" target="_blank">http://localhost:3000/login</a></li>
+                <li>Try logging in with:</li>
+                <ul>
+                    <li><strong>Admin:</strong> admin@test.com / admin123</li>
+                    <li><strong>Marketer:</strong> marketer@test.com / admin123</li>
+                </ul>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>✅ Expected Result:</strong> After completing these steps, you should be able to login successfully and access all admin/marketer features.
+        </div>
+
+        <div class="step">
+            <h3>Quick Test</h3>
+            <button onclick="testConnection()">Test Backend Connection</button>
+            <div id="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function testConnection() {
+            const resultDiv = document.getElementById('test-result');
+            resultDiv.innerHTML = '<p>Testing connection...</p>';
+            
+            fetch('http://localhost:3001/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: 'admin@test.com',
+                    password: 'admin123'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.user) {
+                    resultDiv.innerHTML = '<p style="color: green;">✅ Backend is working! Login successful.</p>';
+                } else {
+                    resultDiv.innerHTML = '<p style="color: orange;">⚠️ Backend is running but login failed. Check your Supabase setup.</p>';
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = '<p style="color: red;">❌ Backend connection failed: ' + error.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
