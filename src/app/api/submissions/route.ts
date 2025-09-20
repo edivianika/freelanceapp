@@ -155,25 +155,27 @@ export async function POST(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // Determine status based on existing submissions
-    let status = 'own'; // Default status
-    if (existingSubmissions && existingSubmissions.length > 0) {
-      // Other marketers already have this data, so this will be a duplicate
-      status = 'duplicate';
-    }
-
+    // Let database handle status with default value
     const submissionData: any = {
       user_id: user.id,
       name,
       phone_number,
       project_interest,
-      notes: notes || null,
-      status: status
+      notes: notes || null
+      // status will use database default
     };
+
+    // Determine status based on existing submissions for logging
+    let expectedStatus = 'pending'; // Database default
+    if (existingSubmissions && existingSubmissions.length > 0) {
+      expectedStatus = 'duplicate';
+    } else {
+      expectedStatus = 'own';
+    }
 
     console.log('🔍 POST - Submission data to insert:', submissionData);
     console.log('🔍 POST - Existing submissions:', existingSubmissions?.length || 0);
-    console.log('🔍 POST - Status determined:', status);
+    console.log('🔍 POST - Expected status:', expectedStatus);
 
     const { data: submission, error } = await supabaseAdmin
       .from('submissions')
@@ -185,6 +187,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error('🔍 POST - Insert error:', error);
+      console.error('🔍 POST - Insert error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
