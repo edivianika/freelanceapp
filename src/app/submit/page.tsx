@@ -85,7 +85,20 @@ export default function SubmitPage() {
     } catch (error: unknown) {
       console.error('Submission error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit data';
-      toast.error(errorMessage);
+      
+      // Handle specific duplicate error
+      if (errorMessage.includes('sudah pernah Anda input') || errorMessage.includes('Tidak dapat input data yang sama')) {
+        toast.error('⚠️ Data sudah pernah Anda input sebelumnya!\nTidak dapat input data yang sama.', {
+          duration: 5000,
+          style: {
+            background: '#FEF2F2',
+            color: '#DC2626',
+            border: '1px solid #FECACA'
+          }
+        });
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

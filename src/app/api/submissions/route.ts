@@ -145,28 +145,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: checkError.message }, { status: 400 });
     }
 
-    let submissionData: any = {
+    // Check if current user already owns this data
+    const ownExistingSubmission = existingSubmissions?.find(sub => sub.user_id === user.id);
+    
+    if (ownExistingSubmission) {
+      // Block submission - user already owns this data
+      return NextResponse.json({ 
+        error: 'Data sudah pernah Anda input sebelumnya. Tidak dapat input data yang sama.' 
+      }, { status: 409 });
+    }
+
+    // Determine status based on existing submissions
+    let status = 'own'; // Default status
+    if (existingSubmissions && existingSubmissions.length > 0) {
+      // Other marketers already have this data, so this will be a duplicate
+      status = 'duplicate';
+    }
+
+    const submissionData: any = {
       user_id: user.id,
       name,
       phone_number,
       project_interest,
-      notes: notes || null
+      notes: notes || null,
+      status: status
     };
 
     console.log('🔍 POST - Submission data to insert:', submissionData);
-
-    // Debug: Test database connection
-    const { data: testUser, error: testError } = await supabaseAdmin
-      .from('users')
-      .select('id, name, email')
-      .eq('id', user.id)
-      .single();
-    
-    console.log('🔍 POST - User verification from database:', { testUser, testError });
-
-    // Skip duplicate check for debugging
-    // Just insert with default status
-    // submissionData already defined above
+    console.log('🔍 POST - Existing submissions:', existingSubmissions?.length || 0);
+    console.log('🔍 POST - Status determined:', status);
 
     const { data: submission, error } = await supabaseAdmin
       .from('submissions')
