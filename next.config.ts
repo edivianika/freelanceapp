@@ -14,7 +14,11 @@ const nextConfig: NextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
-  }
+  },
+  // Fix for workspace root warning
+  outputFileTracingRoot: __dirname,
+  // Disable Turbopack for stability
+  turbo: undefined
 };
 
 export default nextConfig;
